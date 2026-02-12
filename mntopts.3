@@ -1,0 +1,209 @@
+.\" Copyright (c) 2023 Marshall Kirk McKusick
+.\" Copyright (c) 1994 The Regents of the University of California.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHORS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.Dd February 11, 2026
+.Dt MNTOPTS 3
+.Os
+.Sh NAME
+.Nm getmntpoint ,
+.Nm chkdoreload ,
+.Nm build_iovec ,
+.Nm build_iovec_argf ,
+.Nm free_iovec ,
+.Nm checkpath ,
+.Nm checkpath_allow_file ,
+.Nm rmslashes
+.Nd mount point helper routines
+.Sh LIBRARY
+.Lb libutil
+.Sh SYNOPSIS
+.In mntopts.h
+.Ft struct statfs *
+.Fn getmntpoint "const char *name"
+.Ft int
+.Fo chkdoreload
+.Fa "struct statfs *mntp"
+.Fa "void (*prtmsg)(const char *fmt, ...)"
+.Fc
+.Ft void
+.Fo build_iovec
+.Fa "struct iovec **iov" "int *iovlen" "const char *name" "void *val"
+.Fa "size_t len"
+.Fc
+.Ft void
+.Fo build_iovec_argf
+.Fa "struct iovec **iov" "int *iovlen" "const char *name"
+.Fa "const char *fmt" "..."
+.Fc
+.Ft void
+.Fn free_iovec "struct iovec **iov" "int *iovlen"
+.Ft int
+.Fn checkpath "const char *path" "char *resolved"
+.Ft int
+.Fn checkpath_allow_file "const char *path" "char *resolved"
+.Ft void
+.Fn rmslashes "char *rrpin" "char *rrpout"
+.Sh DESCRIPTION
+The
+.Nm mntopts
+functions support operations associated with mount points and path handling.
+.Pp
+Option parsing interfaces such as
+.Fn getmntopts
+and
+.Va getmnt_silent
+are documented in
+.Xr getmntopts 3 .
+This manual page documents the remaining helper routines.
+.Pp
+The
+.Fn getmntpoint
+function takes the pathname of a possible mount point or a device
+(with or without
+.Pa /dev/
+prepended).
+If a matching active mount is found, it returns a pointer to a
+.Vt "struct statfs" .
+The returned pointer refers to storage owned by
+.Xr getmntinfo 3
+and may be overwritten by later calls to
+.Fn getmntpoint
+or
+.Xr getmntinfo 3 .
+.Pp
+The
+.Fn chkdoreload
+function attempts to reload metadata for a mounted read-only filesystem.
+If
+.Fa mntp
+is
+.Dv NULL
+or refers to a read-write mount, no reload is needed and success is returned.
+When a reload is attempted, it uses
+.Xr mount 2
+with
+.Dv MNT_UPDATE
+and, when available,
+.Dv MNT_RELOAD .
+If the reload fails and
+.Fa prtmsg
+is not
+.Dv NULL ,
+the callback is used to print an explanatory message.
+.Pp
+The
+.Fn build_iovec
+function appends one name/value entry pair to an
+.Vt iovec
+array.
+Before the first call,
+.Fa *iov
+should be
+.Dv NULL
+and
+.Fa *iovlen
+should be 0.
+If
+.Fa len
+is \-1,
+the length is computed with
+.Xr strlen 3
+when
+.Fa val
+is not
+.Dv NULL .
+.Pp
+The
+.Fn build_iovec_argf
+function formats a value using
+.Xr vsnprintf 3
+semantics and then appends it using
+.Fn build_iovec .
+.Pp
+The
+.Fn free_iovec
+function frees memory allocated for an
+.Vt iovec
+array created with
+.Fn build_iovec
+and
+.Fn build_iovec_argf .
+.Pp
+The
+.Fn checkpath
+function resolves
+.Fa path
+with
+.Xr realpath 3
+and verifies that the result is a directory.
+The
+.Fn checkpath_allow_file
+function performs the same validation but allows either a directory or
+a regular file.
+.Pp
+The
+.Fn rmslashes
+function removes repeated slashes and a trailing slash (except for
+the root path) from
+.Fa rrpin
+and writes the result to
+.Fa rrpout .
+.Sh RETURN VALUES
+The
+.Fn getmntpoint
+function returns a pointer to a
+.Vt "struct statfs"
+on success and
+.Dv NULL
+if no matching mount is found or an error occurs.
+.Pp
+The
+.Fn chkdoreload ,
+.Fn checkpath ,
+and
+.Fn checkpath_allow_file
+functions return 0 on success and non-zero on failure.
+.Sh DIAGNOSTICS
+The
+.Fn checkpath
+and
+.Fn checkpath_allow_file
+functions set
+.Va errno
+on failure.
+If the resolved path is of an unsupported file type,
+.Va errno
+is set to
+.Dv ENOTDIR .
+.Sh SEE ALSO
+.Xr mount 2 ,
+.Xr err 3 ,
+.Xr getmntinfo 3 ,
+.Xr getmntopts 3 ,
+.Xr realpath 3 ,
+.Xr mount 8
+.Sh HISTORY
+These interfaces are provided by
+.Nm libutil
+for mount utility support.
