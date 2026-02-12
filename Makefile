@@ -27,7 +27,7 @@ RANLIB=		ranlib
 CFLAGS?=	-O2
 CPPFLAGS?=
 LDFLAGS?=
-LDADD?=
+LDADD?=		-L. -lcrypt-fbsd
 PICFLAG?=	-fPIC
 
 CFLAGS+=	-DNO__SCCSID -I.

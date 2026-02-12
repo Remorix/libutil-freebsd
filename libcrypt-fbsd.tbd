@@ -1,0 +1,14 @@
+--- !tapi-tbd
+tbd-version:     4
+targets:         [ x86_64, arm64, arm64e ]
+flags:           [ not_app_extension_safe ]
+install-name:    '@rpath/libcrypt-fbsd.dylib'
+current-version: 5
+compatibility-version: 5
+exports:
+  - targets:         [ x86_64, arm64, arm64e ]
+    symbols:         [ _Blowfish_expand0state, _Blowfish_expandstate, _Blowfish_initstate, _Blowfish_stream2word,
+                       __crypt_to64, _b64_from_24bit, _blf_enc, _crypt, _crypt_blowfish, _crypt_des,
+                       _crypt_get_format, _crypt_md5, _crypt_nthash, _crypt_r, _crypt_set_format,
+                       _crypt_sha256, _crypt_sha512 ]
+...
