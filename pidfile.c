@@ -50,22 +50,16 @@
 #define EDOOFUS EINVAL
 #endif
 
+#ifndef __APPLE__
 struct pidfh {
-#ifdef __APPLE__
-	/*
-	 * Darwin provides pidfile_open/write/close/remove in system libutil.
-	 * Keep only the leading fd field needed by pidfile_fileno().
-	 */
-	int	pf_fd;
-#else
 	int	pf_dirfd;
 	int	pf_fd;
-#endif
 	char	pf_dir[MAXPATHLEN + 1];
 	char	pf_filename[MAXPATHLEN + 1];
 	dev_t	pf_dev;
 	ino_t	pf_ino;
 };
+#endif
 
 #ifndef __APPLE__
 static int _pidfile_remove(struct pidfh *pfh, int freeit);
@@ -368,12 +362,32 @@ pidfile_remove(struct pidfh *pfh)
 int
 pidfile_fileno(const struct pidfh *pfh)
 {
+#ifdef __APPLE__
+	int fd;
+#endif
 
-	if (pfh == NULL || pfh->pf_fd == -1) {
+	if (pfh == NULL) {
+		errno = EDOOFUS;
+		return (-1);
+	}
+#ifdef __APPLE__
+	/*
+	 * Darwin's pidfh comes from system libutil and is opaque to this build.
+	 * Read the descriptor prefix only.
+	 */
+	memcpy(&fd, pfh, sizeof(fd));
+	if (fd == -1) {
+		errno = EDOOFUS;
+		return (-1);
+	}
+	return (fd);
+#else
+	if (pfh->pf_fd == -1) {
 		errno = EDOOFUS;
 		return (-1);
 	}
 	return (pfh->pf_fd);
+#endif
 }
 
 int

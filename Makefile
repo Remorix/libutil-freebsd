@@ -1,7 +1,7 @@
 LIB?=		util-fbsd
 SHLIB_MAJOR?=	10
 
-SRCS=	_secure_path.c expand_number.c flopen.c fparseln.c \
+SRCS=	_secure_path.c expand_number.c flopen.c \
 	ftime.c getlocalbase.c gr_util.c \
 	hexdump.c \
 	kinfo_getallproc.c kinfo_getproc.c kinfo_getvmmap.c \
@@ -12,7 +12,7 @@ SRCS=	_secure_path.c expand_number.c flopen.c fparseln.c \
 	trimdomain.c uucplock.c
 INCS=	libutil.h login_cap.h mntopts.h
 
-MAN=	expand_number.3 flopen.3 fparseln.3 \
+MAN=	expand_number.3 flopen.3 \
 	ftime.3 getlocalbase.3 hexdump.3 humanize_number.3 \
 	kinfo_getallproc.3 kinfo_getproc.3 kinfo_getvmmap.3 \
 	login_auth.3 login_cap.3 login_class.3 login_ok.3 login_times.3 \

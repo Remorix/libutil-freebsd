@@ -36,13 +36,17 @@
  * SUCH DAMAGE.
  */
 
-#ifndef _LIBUTIL_H_
-#define	_LIBUTIL_H_
+#ifndef _LIBUTIL_FBSD_H_
+#define	_LIBUTIL_FBSD_H_
 
 #include <sys/cdefs.h>
 #include <sys/types.h>
 #include <stdint.h>
 #include <AvailabilityMacros.h>
+
+#if __has_include_next(<libutil.h>)
+#include_next <libutil.h>
+#endif
 
 #ifndef _GID_T_DECLARED
 #define	_GID_T_DECLARED
@@ -142,15 +146,6 @@ const char *
 int	uu_lock(const char *_ttyname);
 int	uu_unlock(const char *_ttyname);
 int	uu_lock_txfr(const char *_ttyname, pid_t _pid);
-
-/*
- * Conditionally prototype the following functions if the include
- * files upon which they depend have been included.
- */
-#ifdef _STDIO_H_
-char	*fparseln(FILE *_fp, size_t *_len, size_t *_lineno,
-	    const char _delim[3], int _flags);
-#endif
 
 #ifdef _PWD_H_
 int	pw_copy(int _ffd, int _tfd, const struct passwd *_pw,
@@ -281,4 +276,4 @@ __END_DECLS
 #define	UU_LOCK_TRY_ERR		(-6)
 #define	UU_LOCK_OWNER_ERR	(-7)
 
-#endif /* !_LIBUTIL_H_ */
+#endif /* !_LIBUTIL_FBSD_H_ */
