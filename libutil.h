@@ -88,7 +88,6 @@ struct winsize;
 __BEGIN_DECLS
 void	clean_environment(const char * const *_white,
 	    const char * const *_more_white);
-int	expand_number(const char *_buf, int64_t *_num);
 int	expand_unsigned(const char *_buf, uint64_t *_num);
 #if (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L) ||	\
 	__has_extension(c_generic_selections)
@@ -230,13 +229,6 @@ int	domainset_parselist(const char *list, domainset_t *mask, int *policyp) __API
 
 __END_DECLS
 
-/* fparseln(3) */
-#define	FPARSELN_UNESCESC	0x01
-#define	FPARSELN_UNESCCONT	0x02
-#define	FPARSELN_UNESCCOMM	0x04
-#define	FPARSELN_UNESCREST	0x08
-#define	FPARSELN_UNESCALL	0x0f
-
 /* Flags for hexdump(3). */
 #define	HD_COLUMN_MASK		0xff
 #define	HD_DELIM_MASK		0xff00
@@ -256,10 +248,18 @@ __END_DECLS
 #define	HN_AUTOSCALE		0x20
 
 /* Return values from realhostname(). */
+#ifndef HOSTNAME_FOUND
 #define	HOSTNAME_FOUND		0
+#endif
+#ifndef HOSTNAME_INCORRECTNAME
 #define	HOSTNAME_INCORRECTNAME	1
+#endif
+#ifndef HOSTNAME_INVALIDADDR
 #define	HOSTNAME_INVALIDADDR	2
+#endif
+#ifndef HOSTNAME_INVALIDNAME
 #define	HOSTNAME_INVALIDNAME	3
+#endif
 
 /* Flags for pw_scan(). */
 #define	PWSCAN_MASTER		0x01
