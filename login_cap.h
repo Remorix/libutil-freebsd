@@ -97,6 +97,7 @@ typedef struct login_time {
 #define LC_MAXTIMES 64
 
 #include <sys/cdefs.h>
+#include <sys/resource.h>	/* rlim_t */
 __BEGIN_DECLS
 struct passwd;
 
