@@ -44,7 +44,7 @@
 #define LOGIN_SETUMASK		0x0020		/* set umask, obviously */
 #define LOGIN_SETUSER		0x0040		/* set user (via setuid) */
 #define LOGIN_SETENV		0x0080		/* set user environment */
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(BUILDING_LIBUTIL)
 #define LOGIN_SETMAC		0x0100		/* set user default MAC label */
 #define LOGIN_SETCPUMASK	0x0200		/* set user cpumask */
 #define LOGIN_SETLOGINCLASS	0x0400		/* set login class in the kernel */
