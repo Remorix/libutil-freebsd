@@ -36,6 +36,7 @@
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <login_cap.h>
 #include <paths.h>
 #include <pwd.h>
@@ -86,6 +87,18 @@ static struct login_res {
 #endif
     { NULL,              0,                0              }
 };
+
+#ifdef __APPLE__
+#define UID_LOGFMT "%jd"
+#define UID_LOGARG(_uid) ((intmax_t)(id_t)(_uid))
+#define GID_LOGFMT "%jd"
+#define GID_LOGARG(_gid) ((intmax_t)(id_t)(_gid))
+#else
+#define UID_LOGFMT "%ju"
+#define UID_LOGARG(_uid) ((uintmax_t)(_uid))
+#define GID_LOGFMT "%ju"
+#define GID_LOGARG(_gid) ((uintmax_t)(_gid))
+#endif
 
 
 void
@@ -627,13 +640,14 @@ setusercontext(login_cap_t *lc, const struct passwd *pwd, uid_t uid, unsigned in
     /* Setup the user's group permissions */
     if (flags & LOGIN_SETGROUP) {
 	if (setgid(pwd->pw_gid) != 0) {
-	    syslog(LOG_ERR, "setgid(%lu): %m", (u_long)pwd->pw_gid);
+	    syslog(LOG_ERR, "setgid(" GID_LOGFMT "): %m",
+		GID_LOGARG(pwd->pw_gid));
 	    login_close(llc);
 	    return (-1);
 	}
 	if (initgroups(pwd->pw_name, pwd->pw_gid) == -1) {
-	    syslog(LOG_ERR, "initgroups(%s,%lu): %m", pwd->pw_name,
-		   (u_long)pwd->pw_gid);
+	    syslog(LOG_ERR, "initgroups(%s," GID_LOGFMT "): %m",
+		pwd->pw_name, GID_LOGARG(pwd->pw_gid));
 	    login_close(llc);
 	    return (-1);
 	}
@@ -695,7 +709,7 @@ setusercontext(login_cap_t *lc, const struct passwd *pwd, uid_t uid, unsigned in
 
     /* This needs to be done after anything that needs root privs */
     if ((flags & LOGIN_SETUSER) && setuid(uid) != 0) {
-	syslog(LOG_ERR, "setuid(%lu): %m", (u_long)uid);
+	syslog(LOG_ERR, "setuid(" UID_LOGFMT "): %m", UID_LOGARG(uid));
 	return (-1);	/* Paranoia again */
     }
 

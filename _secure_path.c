@@ -23,9 +23,18 @@
 #include <sys/stat.h>
 
 #include <errno.h>
+#include <inttypes.h>
 #include <libutil.h>
 #include <stddef.h>
 #include <syslog.h>
+
+#ifdef __APPLE__
+#define UID_LOGFMT "%jd"
+#define UID_LOGARG(_uid) ((intmax_t)(id_t)(_uid))
+#else
+#define UID_LOGFMT "%ju"
+#define UID_LOGARG(_uid) ((uintmax_t)(_uid))
+#endif
 
 /*
  * Check for common security problems on a given path
@@ -56,16 +65,16 @@ _secure_path(const char *path, uid_t uid, gid_t gid)
     	msg = "%s: %s is not a regular file";
     else if (sb.st_mode & S_IWOTH)
     	msg = "%s: %s is world writable";
-    else if ((int)uid != -1 && sb.st_uid != uid && sb.st_uid != 0) {
+    else if (uid != (uid_t)-1 && sb.st_uid != uid && sb.st_uid != 0) {
     	if (uid == 0)
     		msg = "%s: %s is not owned by root";
     	else
-    		msg = "%s: %s is not owned by uid %d";
-    } else if ((int)gid != -1 && sb.st_gid != gid && (sb.st_mode & S_IWGRP))
+    		msg = "%s: %s is not owned by uid " UID_LOGFMT;
+    } else if (gid != (gid_t)-1 && sb.st_gid != gid && (sb.st_mode & S_IWGRP))
     	msg = "%s: %s is group writeable by non-authorised groups";
     else
     	r = 0;
     if (msg != NULL)
-	syslog(LOG_ERR, msg, "_secure_path", path, uid);
+	syslog(LOG_ERR, msg, "_secure_path", path, UID_LOGARG(uid));
     return r;
 }

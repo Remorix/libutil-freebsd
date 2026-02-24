@@ -55,6 +55,14 @@ static int initialized;
 static size_t grmemlen(const struct group *, const char *, int *);
 static struct group *grcopy(const struct group *gr, char *mem, const char *, int ndx);
 
+#ifdef __APPLE__
+#define GR_GID_FMT "%jd"
+#define GR_GID_ARG(_gid) ((intmax_t)(id_t)(_gid))
+#else
+#define GR_GID_FMT "%ju"
+#define GR_GID_ARG(_gid) ((uintmax_t)(_gid))
+#endif
+
 /*
  * Initialize statics
  */
@@ -429,7 +437,7 @@ gr_equal(const struct group *gr1, const struct group *gr2)
 char *
 gr_make(const struct group *gr)
 {
-	const char *group_line_format = "%s:%s:%ju:";
+	const char *group_line_format = "%s:%s:" GR_GID_FMT ":";
 	const char *sep;
 	char *line;
 	char *p;
@@ -438,7 +446,7 @@ gr_make(const struct group *gr)
 
 	/* Calculate the length of the group line. */
 	line_size = snprintf(NULL, 0, group_line_format, gr->gr_name,
-	    gr->gr_passwd, (uintmax_t)gr->gr_gid) + 1;
+	    gr->gr_passwd, GR_GID_ARG(gr->gr_gid)) + 1;
 	if (gr->gr_mem != NULL) {
 		for (ndx = 0; gr->gr_mem[ndx] != NULL; ndx++)
 			line_size += strlen(gr->gr_mem[ndx]) + 1;
@@ -450,7 +458,7 @@ gr_make(const struct group *gr)
 	if ((line = p = malloc(line_size)) == NULL)
 		return (NULL);
 	p += sprintf(p, group_line_format, gr->gr_name, gr->gr_passwd,
-	    (uintmax_t)gr->gr_gid);
+	    GR_GID_ARG(gr->gr_gid));
 	if (gr->gr_mem != NULL) {
 		sep = "";
 		for (ndx = 0; gr->gr_mem[ndx] != NULL; ndx++) {
@@ -601,6 +609,7 @@ static bool
 __gr_scan(char *line, struct group *gr)
 {
 	char *loc;
+	char *endp;
 	int ndx;
 
 	/* Assign non-member information to structure. */
@@ -616,13 +625,34 @@ __gr_scan(char *line, struct group *gr)
 			return (false);
 		*loc = '\0';
 	}
-	if (sscanf(loc + 1, "%u", &gr->gr_gid) != 1)
-		return (false);
+#ifdef __APPLE__
+	{
+		intmax_t gid;
+
+		errno = 0;
+		gid = strtoimax(loc + 1, &endp, 10);
+		if (errno == ERANGE || endp == loc + 1 || *endp != ':')
+			return (false);
+		if ((intmax_t)(id_t)gid != gid)
+			return (false);
+		gr->gr_gid = (gid_t)(id_t)gid;
+	}
+#else
+	{
+		uintmax_t gid;
+
+		errno = 0;
+		gid = strtoumax(loc + 1, &endp, 10);
+		if (errno == ERANGE || endp == loc + 1 || *endp != ':')
+			return (false);
+		if ((uintmax_t)(gid_t)gid != gid)
+			return (false);
+		gr->gr_gid = (gid_t)gid;
+	}
+#endif
 
 	/* Assign member information to structure. */
-	if ((loc = strchr(loc + 1, ':')) == NULL)
-		return (false);
-	line = loc + 1;
+	line = endp + 1;
 	gr->gr_mem = NULL;
 	ndx = 0;
 	do {

@@ -79,6 +79,16 @@ static char passwd_dir[PATH_MAX];
 static char tempname[PATH_MAX];
 static int initialized;
 
+#ifdef __APPLE__
+#define PW_ID_FMT "%jd"
+#define PW_UID_ARG(_uid) ((intmax_t)(id_t)(_uid))
+#define PW_GID_ARG(_gid) ((intmax_t)(id_t)(_gid))
+#else
+#define PW_ID_FMT "%ju"
+#define PW_UID_ARG(_uid) ((uintmax_t)(_uid))
+#define PW_GID_ARG(_gid) ((uintmax_t)(_gid))
+#endif
+
 #if 0
 void
 pw_cont(int sig)
@@ -406,8 +416,8 @@ pw_make(const struct passwd *pw)
 {
 	char *line;
 
-	asprintf(&line, "%s:%s:%ju:%ju:%s:%ju:%ju:%s:%s:%s", pw->pw_name,
-	    pw->pw_passwd, (uintmax_t)pw->pw_uid, (uintmax_t)pw->pw_gid,
+	asprintf(&line, "%s:%s:" PW_ID_FMT ":" PW_ID_FMT ":%s:%ju:%ju:%s:%s:%s", pw->pw_name,
+	    pw->pw_passwd, PW_UID_ARG(pw->pw_uid), PW_GID_ARG(pw->pw_gid),
 	    pw->pw_class, (uintmax_t)pw->pw_change, (uintmax_t)pw->pw_expire,
 	    pw->pw_gecos, pw->pw_dir, pw->pw_shell);
 	return (line);
@@ -421,8 +431,8 @@ pw_make_v7(const struct passwd *pw)
 {
 	char *line;
 
-	asprintf(&line, "%s:*:%ju:%ju:%s:%s:%s", pw->pw_name,
-	    (uintmax_t)pw->pw_uid, (uintmax_t)pw->pw_gid,
+	asprintf(&line, "%s:*:" PW_ID_FMT ":" PW_ID_FMT ":%s:%s:%s", pw->pw_name,
+	    PW_UID_ARG(pw->pw_uid), PW_GID_ARG(pw->pw_gid),
 	    pw->pw_gecos, pw->pw_dir, pw->pw_shell);
 	return (line);
 }
