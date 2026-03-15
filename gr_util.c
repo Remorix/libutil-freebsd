@@ -57,7 +57,7 @@ static struct group *grcopy(const struct group *gr, char *mem, const char *, int
 
 #ifdef __APPLE__
 #define GR_GID_FMT "%jd"
-#define GR_GID_ARG(_gid) ((intmax_t)(id_t)(_gid))
+#define GR_GID_ARG(_gid) ((intmax_t)(int)(_gid))
 #else
 #define GR_GID_FMT "%ju"
 #define GR_GID_ARG(_gid) ((uintmax_t)(_gid))
@@ -627,15 +627,14 @@ __gr_scan(char *line, struct group *gr)
 	}
 #ifdef __APPLE__
 	{
-		intmax_t gid;
+		long gid;
 
 		errno = 0;
-		gid = strtoimax(loc + 1, &endp, 10);
-		if (errno == ERANGE || endp == loc + 1 || *endp != ':')
+		gid = strtol(loc + 1, &endp, 10);
+		if (errno == ERANGE || endp == loc + 1 || *endp != ':' ||
+		    gid > GID_MAX)
 			return (false);
-		if ((intmax_t)(id_t)gid != gid)
-			return (false);
-		gr->gr_gid = (gid_t)(id_t)gid;
+		gr->gr_gid = (gid_t)gid;
 	}
 #else
 	{

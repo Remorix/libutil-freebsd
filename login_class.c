@@ -90,9 +90,9 @@ static struct login_res {
 
 #ifdef __APPLE__
 #define UID_LOGFMT "%jd"
-#define UID_LOGARG(_uid) ((intmax_t)(id_t)(_uid))
+#define UID_LOGARG(_uid) ((intmax_t)(int)(_uid))
 #define GID_LOGFMT "%jd"
-#define GID_LOGARG(_gid) ((intmax_t)(id_t)(_gid))
+#define GID_LOGARG(_gid) ((intmax_t)(int)(_gid))
 #else
 #define UID_LOGFMT "%ju"
 #define UID_LOGARG(_uid) ((uintmax_t)(_uid))

@@ -81,8 +81,8 @@ static int initialized;
 
 #ifdef __APPLE__
 #define PW_ID_FMT "%jd"
-#define PW_UID_ARG(_uid) ((intmax_t)(id_t)(_uid))
-#define PW_GID_ARG(_gid) ((intmax_t)(id_t)(_gid))
+#define PW_UID_ARG(_uid) ((intmax_t)(int)(_uid))
+#define PW_GID_ARG(_gid) ((intmax_t)(int)(_gid))
 #else
 #define PW_ID_FMT "%ju"
 #define PW_UID_ARG(_uid) ((uintmax_t)(_uid))
